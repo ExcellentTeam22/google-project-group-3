@@ -1,100 +1,138 @@
-# feature using Trie data structure.
-
-#creates a trie node
+# Python3 code for the above program
 class TrieNode():
-	def __init__(self):
-		# Initialising one node for trie
-		self.children = {}
-		self.last = False
+    def __init__(self):
+        # Initialize one node for trie
+        self.children = {}
+        self.last = False
 
-#Given a prefix it will print all the matching words in the array
+
+def reverse(s):
+    str = ""
+    for i in s:
+        str = i + str
+    return str
+
+
 class Trie():
+    def __init__(self):
 
-	def __init__(self):
+        # Initialize the trie structure
+        self.root = TrieNode()
+        self.word_list = []
 
-		# Initialising the trie structure.
-		self.root = TrieNode()
+    def formTrie(self, keys):
 
-	def formTrie(self, keys):
+        # Forms a trie structure
+        # with the given set of
+        # strings if it does not
+        # exists already else it
+        # merges the key into it
+        # by extending the
+        # structure as required
+        for key in keys:
+            # inserting one key
+            # to the trie.
+            self.insert(key)
 
-		# Forms a trie structure with the given set of strings
-		# if it does not exists already else it merges the key
-		# into it by extending the structure as required
-		for key in keys:
-			self.insert(key) # inserting one key to the trie.
+    def insert(self, key):
 
-	def insert(self, key):
+        # Inserts a key into
+        # trie if it does not
+        # exist already. And if
+        # the key is a suffix
+        # of the trie node, just
+        # marks it as leaf node.
+        node = self.root
 
-		# Inserts a key into trie if it does not exist already.
-		# And if the key is a prefix of the trie node, just
-		# marks it as leaf node.
-		node = self.root
+        for a in list(key):
+            if not node.children.get(a):
+                node.children[a] = TrieNode()
 
-		for a in key:
-			if not node.children.get(a):
-				node.children[a] = TrieNode()
+            node = node.children[a]
 
-			node = node.children[a]
+        node.last = True
 
-		node.last = True
+    def search(self, key):
 
-	def suggestionsRec(self, node, word):
+        # Searches the given key
+        # in trie for a full match
+        # and returns True on
+        # success else returns False
+        node = self.root
+        found = True
 
-		# Method to recursively traverse the trie
-		# and return a whole word.
-		if node.last:
-			print(word)
+        for a in list(key):
+            if not node.children.get(a):
+                found = False
+                break
 
-		for a, n in node.children.items():
-			self.suggestionsRec(n, word + a)
+            node = node.children[a]
 
-	def printAutoSuggestions(self, key):
+        return node and node.last and found
 
-		# Returns all the words in the trie whose common
-		# prefix is the given key thus listing out all
-		# the suggestions for autocomplete.
-		node = self.root
+    def printStrings(self, node, word):
 
-		for a in key:
-			# no string in the Trie has this prefix
-			if not node.children.get(a):
-				return 0
-			node = node.children[a]
+        # Method to recursively
+        # traverse the trie
+        # and return a whole word
+        if node.last:
+            self.word_list.append(word)
 
-		# If prefix is present as a word, but
-		# there is no subtree below the last
-		# matching node.
-		if not node.children:
-			return -1
+        for a, n in node.children.items():
+            self.printStrings(n, word + a)
 
-		self.suggestionsRec(node, key)
-		return 1
+    def printStringsWithGivenSuffix(self, key):
+
+        # Returns all the words in
+        # the trie whose common
+        # suffix is the given key
+        # thus listing out all
+        # the strings
+        node = self.root
+        not_found = False
+        temp_word = ''
+
+        for a in list(key):
+            if not node.children.get(a):
+                not_found = True
+                break
+
+            temp_word += a
+            node = node.children[a]
+
+        if not_found:
+            return 0
+        elif node.last and not node.children:
+            return -1
+
+        self.printStrings(node, temp_word)
+
+        for s in self.word_list:
+            print(reverse(s))
+        return 1
 
 
 # Driver Code
-keys = ["hello world", "dog", "hell", "cat", "a", "hel", "help", "helps", "helping"]
-# keys to form the trie structure.
-key = "he"
-# key for autocomplete suggestions.
+
+# keys to form the trie structure
+keys = [reverse("geeks"),
+        reverse("geeksforgeeks"),
+        reverse("geek"),
+        reverse("newgeeks"),
+        reverse("friendsongeeks"),
+        reverse("toppergeek")]
+
+# key
+key = "eek"
+status = ["Not found", "Found"]
 
 # creating trie object
 t = Trie()
 
-# creating the trie structure with the
-# given set of strings.
+# creating the trie structure
+# with the given set of strings
 t.formTrie(keys)
 
-# autocompleting the given key using
-# our trie structure.
-comp = t.printAutoSuggestions(key)
-
-if comp == -1:
-	print("No other strings found with this prefix\n")
-elif comp == 0:
-	print("No string found with this prefix\n")
-
-
-#taken from geeks for geeks
-#https://www.geeksforgeeks.org/auto-complete-feature-using-trie/
-
-
+# print string having suffix 'P'
+# our trie structure
+comp = t.printStringsWithGivenSuffix(reverse(key))
