@@ -94,6 +94,6 @@ elif comp == 0:
 	print("No string found with this prefix\n")
 
 
-
+#taken from geeks for geeks
 
 
