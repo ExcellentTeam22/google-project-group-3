@@ -1,13 +1,13 @@
 # feature using Trie data structure.
 
-
+#creates a trie node
 class TrieNode():
 	def __init__(self):
 		# Initialising one node for trie
 		self.children = {}
 		self.last = False
 
-
+#Given a prefix it will print all the matching words in the array
 class Trie():
 
 	def __init__(self):
