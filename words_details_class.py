@@ -14,3 +14,7 @@ class WordDetails:
         self.word_place = word_place
         self.start_row_position = start_row_position
         self.file_path = file_path
+        self.next = None
+
+    def set_next(self, next_word: "WordDetails"):
+        self.next = next_word
