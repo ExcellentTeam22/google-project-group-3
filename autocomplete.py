@@ -136,3 +136,4 @@ t.formTrie(keys)
 # print string having suffix 'P'
 # our trie structure
 comp = t.printStringsWithGivenSuffix(reverse(key))
+#https://www.geeksforgeeks.org/find-strings-that-end-with-a-given-suffix/
