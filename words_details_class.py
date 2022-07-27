@@ -17,6 +17,9 @@ class WordDetails:
         self.next = None
         self.full_row = full_row
 
+    """
+    A function that returns a pointer to the next element in the sentence
+    """
     def set_next(self, next_word: "WordDetails"):
         self.next = next_word
 
