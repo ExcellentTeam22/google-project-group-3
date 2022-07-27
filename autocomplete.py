@@ -4,15 +4,16 @@ import re
 from string import ascii_lowercase
 from typing import List
 from words_details_class import WordDetails
-
+"""
+A dictionary that keeps the details we need for each word
+"""
 WORDS_DETAILS_DICT = {}
 
 
 def reverse(s):
     """
-
-    :param s:
-    :return:
+    :param s:The word obtained from the dictionary
+    :return:Returns the word only in reverse
     """
     string = ""
     for i in s:
@@ -52,8 +53,8 @@ def create_data_dictionary(files_list: List[str]) -> dict[str, List[WordDetails]
 
 
 def initialize_data(files_list: List[str]) -> dict[str, List[WordDetails]]:
-    """ Initialize data and return data structure.
-
+    """
+     Initialize data and return data structure.
     :param files_list: List of files' paths.
     :return: Dictionary as a data structure for all the files.
     """
@@ -63,8 +64,8 @@ def initialize_data(files_list: List[str]) -> dict[str, List[WordDetails]]:
 
 def make_list_of_files() -> List[str]:
     """
-
-    :return:
+    The function passes the file we gave it
+    :return:list of file paths
     """
     dir_path = r"..\archive"
     res = []
@@ -77,9 +78,9 @@ def check_user_words(words_list: List[str], score: int) -> List[AutoCompleteData
     """ Receive a list of words and check if there is a sentence inside the data structure that
      matches the received list. Return maximum five results.
 
-    :param words_list:
-    :param score:
-    :return:
+    :param words_list:The list of words we are looking for in the data structure
+    :param score:Determines the score of the received sentence
+    :return:Returns a maximum of five results matching the received sentence
     """
     word_result = []
     all_exists_words = WORDS_DETAILS_DICT.get(words_list[0])
@@ -107,10 +108,11 @@ def check_user_words(words_list: List[str], score: int) -> List[AutoCompleteData
 
 def calculate_optional_results(substring: str, score: int) -> List[AutoCompleteData]:
     """
-
-    :param substring:
-    :param score:
-    :return:
+    Receives the user's string after corrections if necessary,
+    and receives the score of this sentence and returns a list of all relevant sentences
+    :param substring:user's string after corrections if necessary
+    :param score:score of this sentence
+    :return:list of all relevant sentences
     """
     words_list = [word.lower() for word in re.findall(r"[^\w']*([\w']+)[^\w']*", substring)]
     word_result = []
@@ -167,7 +169,6 @@ def get_best_k_completions(prefix: str) -> List[AutoCompleteData]:
 
 
 if __name__ == '__main__':
-
     WORDS_DETAILS_DICT = initialize_data(make_list_of_files())
 
     while True:
