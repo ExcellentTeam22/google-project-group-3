@@ -1,24 +1,23 @@
-from dataclasses import dataclass
+from auto_complete_class import AutoCompleteData
 from os import walk
 import re
 from string import ascii_lowercase
 from typing import List
 from words_details_class import WordDetails
 
-
 WORDS_DETAILS_DICT = {}
 
 
-@dataclass
-class AutoCompleteData:
+def reverse(s):
     """
-    Save inside a data structure the details about each match.
+
+    :param s:
+    :return:
     """
-    def __init__(self, completed_sentence: str, source_text: str, offset: int, score: int):
-        self.completed_sentence = completed_sentence
-        self.source_text = source_text
-        self.offset = offset
-        self.score = score
+    string = ""
+    for i in s:
+        string = i + string
+    return string
 
 
 def create_data_dictionary(files_list: List[str]) -> dict[str, List[WordDetails]]:
@@ -35,10 +34,10 @@ def create_data_dictionary(files_list: List[str]) -> dict[str, List[WordDetails]
             with open(file_path, encoding='UTF8') as file:
                 pos = 0
                 for row_number, row in enumerate(file.readlines()):
-                    words_list = [word.lower() for word in re.findall(r"\W*([\w']+)\W*", row)]
+                    words_list = [word.lower() for word in re.findall(r"[^\w']*([\w']+)[^\w']*", row)]
                     p2prev_word = None
                     for word_place, word in enumerate(words_list):
-                        new_word = WordDetails(word, row_number, word_place, pos, file_path)
+                        new_word = WordDetails(word, row_number, word_place, pos, file_path, row)
                         if word in words_dict.keys():
                             words_dict[word].append(new_word)
                         else:
@@ -68,19 +67,18 @@ def make_list_of_files() -> List[str]:
     :return:
     """
     dir_path = r"..\archive"
-    # dir_path = r"..\t"
     res = []
     for (dir_path, dir_names, files_names) in walk(dir_path):
         res.extend([dir_path + "\\" + file_name for file_name in files_names])
     return res
 
 
-def check_user_words(words_list: List[str], score_if_found: int) -> List[AutoCompleteData]:
+def check_user_words(words_list: List[str], score: int) -> List[AutoCompleteData]:
     """ Receive a list of words and check if there is a sentence inside the data structure that
      matches the received list. Return maximum five results.
 
     :param words_list:
-    :param score_if_found:
+    :param score:
     :return:
     """
     word_result = []
@@ -88,7 +86,6 @@ def check_user_words(words_list: List[str], score_if_found: int) -> List[AutoCom
     if not all_exists_words:
         return []
     for obj in all_exists_words:
-        current_word = obj
         if len(words_list) >= 2:
             current_word = obj.next
             for word in words_list[1:]:
@@ -96,12 +93,11 @@ def check_user_words(words_list: List[str], score_if_found: int) -> List[AutoCom
                     break
                 current_word = current_word.next
             else:
-                word_result.append(obj)  # Need to change to the wanted object.
-                print(obj.file_path, obj.row_num, score_if_found)
+                word_result.append(AutoCompleteData(obj, words_list, score))  # Need to change to the wanted object.
                 if len(word_result) == 5:
                     break
         else:
-            word_result.append(current_word)
+            word_result.append(AutoCompleteData(obj, words_list, score))
         if len(word_result) == 5:
             break
 
@@ -110,18 +106,16 @@ def check_user_words(words_list: List[str], score_if_found: int) -> List[AutoCom
 
 
 def calculate_optional_results(substring: str, score: int) -> List[AutoCompleteData]:
-    words_list = [word.lower() for word in re.findall(r"\W*([\w']+)\W*", substring)]
+    """
+
+    :param substring:
+    :param score:
+    :return:
+    """
+    words_list = [word.lower() for word in re.findall(r"[^\w']*([\w']+)[^\w']*", substring)]
     word_result = []
 
     word_result += check_user_words(words_list, score)
-
-    """
-    for fixed_prefix in find_word_suffix(words_list[0]):
-        for fixed_suffix in find_word_prefix(words_list[-1]):
-            if len(word_result) > 5:
-                break
-            word_result += check_user_words([fixed_prefix] + words_list[1:-1] + [fixed_suffix], len(prefix) * 2)
-    """
     return word_result
 
 
@@ -137,7 +131,7 @@ def get_best_k_completions(prefix: str) -> List[AutoCompleteData]:
 
     # switch
     minus_score = 5
-    for i in range(0, prefix_length):
+    for i in range(0, prefix_length)[::-1]:
         current_letter = prefix[i]
         if current_letter == ' ':
             continue
@@ -152,7 +146,7 @@ def get_best_k_completions(prefix: str) -> List[AutoCompleteData]:
 
     # add
     minus_score = 10
-    for i in range(0, prefix_length + 1):
+    for i in range(0, prefix_length + 1)[::-1]:
         for letter in ascii_lowercase:
             if len(word_result) >= 5:
                 return word_result[:5]
@@ -162,7 +156,7 @@ def get_best_k_completions(prefix: str) -> List[AutoCompleteData]:
 
     # sub
     minus_score = 10
-    for i in range(prefix_length):
+    for i in range(prefix_length)[::-1]:
         if len(word_result) >= 5:
             return word_result[:5]
         current_string = (prefix[:i] if i != 0 else "") + (prefix[i + 1:] if i != prefix_length-1 else "")
@@ -173,11 +167,11 @@ def get_best_k_completions(prefix: str) -> List[AutoCompleteData]:
 
 
 if __name__ == '__main__':
+
     WORDS_DETAILS_DICT = initialize_data(make_list_of_files())
 
     while True:
         prefix = input("Please enter a prefix: ")
-        get_best_k_completions(prefix)
-        # print(get_best_k_completions(prefix))
-
-
+        result = get_best_k_completions(prefix)
+        for item in result:
+            print(item)
