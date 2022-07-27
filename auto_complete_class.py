@@ -24,5 +24,12 @@ class AutoCompleteData:
         self.score = score
 
     def __str__(self):
-        return f"Sentence = {self.completed_sentence}\nOffset = {self.offset}\n " \
+        return f"Sentence = {self.completed_sentence}\nOffset = {self.offset}\n" \
                f"Source = {self.source_text}\nScore = {self.score}\n\n"
+
+    def __lt__(self, other: "AutoCompleteData") -> bool:
+        """ To compare two objects by their score
+        :param other: The second AutoCompleteData object
+        :return: True if current score < other score.
+        """
+        return self.score < other.score
