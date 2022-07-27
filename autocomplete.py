@@ -123,23 +123,25 @@ def calculate_optional_results(substring: str, score: int) -> List[AutoCompleteD
     words_list = [word.lower() for word in re.findall(r"[^\w']*([\w']+)[^\w']*", substring)]
     word_result = []
     word_result += check_user_words(words_list, score)
-    if len(word_result) < 5:
-        if len(words_list) == 1:
-            for word in [reverse(word) for word in SUFFIX_TREE.get_all_words_matching_prefix(reverse(words_list[0]))]:
-                word_result += check_user_words([word], score)
-                if len(word_result) >= 5:
-                    return word_result
-            for word in PREFIX_TREE.get_all_words_matching_prefix(words_list[0]):
-                word_result += check_user_words([word], score)
-                if len(word_result) >= 5:
-                    return word_result
-        else:
-            for start_word in [reverse(word) for word in SUFFIX_TREE.get_all_words_matching_prefix(reverse(words_list[0]))]:
-                for end_word in PREFIX_TREE.get_all_words_matching_prefix(words_list[-1]):
-                    word_result += check_user_words([start_word] + words_list[1:len(words_list) - 1] +
-                                                    [end_word], score)
-                    if len(word_result) >= 5:
-                        return word_result
+    # if len(word_result) < 5:
+    #     first_word_op = [reverse(word) for word in SUFFIX_TREE.get_all_words_matching_prefix(reverse(words_list[0]))]
+    #     last_word_op = PREFIX_TREE.get_all_words_matching_prefix(words_list[-1])
+    #     if len(words_list) == 1:
+    #         for word in first_word_op:
+    #             word_result += check_user_words([word], score)
+    #             if len(word_result) >= 5:
+    #                 return word_result
+    #         for word in last_word_op:
+    #             word_result += check_user_words([word], score)
+    #             if len(word_result) >= 5:
+    #                 return word_result
+    #     else:
+    #         for start_word in first_word_op:
+    #             for end_word in last_word_op:
+    #                 word_result += check_user_words([start_word] + words_list[1:len(words_list) - 1] +
+    #                                                 [end_word], score)
+    #                 if len(word_result) >= 5:
+    #                     return word_result
 
     return word_result
 
