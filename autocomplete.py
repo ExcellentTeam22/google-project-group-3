@@ -1,5 +1,6 @@
 from auto_complete_class import AutoCompleteData
 from os import walk
+from prefix_trie import Trie
 import re
 from string import ascii_lowercase
 from typing import List
@@ -8,6 +9,8 @@ from words_details_class import WordDetails
 A dictionary that keeps the details we need for each word
 """
 WORDS_DETAILS_DICT = {}
+PREFIX_TREE = Trie()
+SUFFIX_TREE = Trie()
 
 
 def reverse(s):
@@ -58,8 +61,12 @@ def initialize_data(files_list: List[str]) -> dict[str, List[WordDetails]]:
     :param files_list: List of files' paths.
     :return: Dictionary as a data structure for all the files.
     """
-    words_dict = create_data_dictionary(files_list)
-    return words_dict
+    words = create_data_dictionary(files_list)
+    keys = words.keys()
+    PREFIX_TREE.form_trie(list(keys))
+    revers_keys = [reverse(word) for word in list(keys)]
+    SUFFIX_TREE.form_trie(revers_keys)
+    return words
 
 
 def make_list_of_files() -> List[str]:
@@ -68,6 +75,7 @@ def make_list_of_files() -> List[str]:
     :return:list of file paths
     """
     dir_path = r"..\archive"
+    # dir_path = r"..\t"
     res = []
     for (dir_path, dir_names, files_names) in walk(dir_path):
         res.extend([dir_path + "\\" + file_name for file_name in files_names])
@@ -94,7 +102,7 @@ def check_user_words(words_list: List[str], score: int) -> List[AutoCompleteData
                     break
                 current_word = current_word.next
             else:
-                word_result.append(AutoCompleteData(obj, words_list, score))  # Need to change to the wanted object.
+                word_result.append(AutoCompleteData(obj, words_list, score))
                 if len(word_result) == 5:
                     break
         else:
@@ -102,13 +110,11 @@ def check_user_words(words_list: List[str], score: int) -> List[AutoCompleteData
         if len(word_result) == 5:
             break
 
-    # Temporary output.
     return word_result
 
 
 def calculate_optional_results(substring: str, score: int) -> List[AutoCompleteData]:
-    """
-    Receives the user's string after corrections if necessary,
+    """Receives the user's string after corrections if necessary,
     and receives the score of this sentence and returns a list of all relevant sentences
     :param substring:user's string after corrections if necessary
     :param score:score of this sentence
@@ -116,8 +122,25 @@ def calculate_optional_results(substring: str, score: int) -> List[AutoCompleteD
     """
     words_list = [word.lower() for word in re.findall(r"[^\w']*([\w']+)[^\w']*", substring)]
     word_result = []
-
     word_result += check_user_words(words_list, score)
+    if len(word_result) < 5:
+        if len(words_list) == 1:
+            for word in [reverse(word) for word in SUFFIX_TREE.get_all_words_matching_prefix(reverse(words_list[0]))]:
+                word_result += check_user_words([word], score)
+                if len(word_result) >= 5:
+                    return word_result
+            for word in PREFIX_TREE.get_all_words_matching_prefix(words_list[0]):
+                word_result += check_user_words([word], score)
+                if len(word_result) >= 5:
+                    return word_result
+        else:
+            for start_word in [reverse(word) for word in SUFFIX_TREE.get_all_words_matching_prefix(reverse(words_list[0]))]:
+                for end_word in PREFIX_TREE.get_all_words_matching_prefix(words_list[-1]):
+                    word_result += check_user_words([start_word] + words_list[1:len(words_list) - 1] +
+                                                    [end_word], score)
+                    if len(word_result) >= 5:
+                        return word_result
+
     return word_result
 
 
@@ -129,9 +152,13 @@ def get_best_k_completions(prefix: str) -> List[AutoCompleteData]:
     """
     prefix_length = len(prefix)
     score = prefix_length * 2
-    word_result = calculate_optional_results(prefix, score)
+    best_word_result = calculate_optional_results(prefix, score)
 
+    if len(best_word_result) >= 5:
+        return best_word_result[:5]
     # switch
+
+    results_after_mistakes = []
     minus_score = 5
     for i in range(0, prefix_length)[::-1]:
         current_letter = prefix[i]
@@ -140,37 +167,42 @@ def get_best_k_completions(prefix: str) -> List[AutoCompleteData]:
         for letter in ascii_lowercase:
             if letter == current_letter:
                 continue
-            if len(word_result) >= 5:
-                return word_result[:5]
+            if len(results_after_mistakes) >= 5:
+                break
             current_string = (prefix[:i] if i != 0 else "") + letter + (prefix[i+1:] if i != prefix_length-1 else "")
-            word_result += calculate_optional_results(current_string, score - minus_score)
+            results_after_mistakes += calculate_optional_results(current_string, score - minus_score)
             minus_score = minus_score - 1 if minus_score != 1 else minus_score
 
+    best_word_result = best_word_result + results_after_mistakes
+    best_word_result.sort(reverse=True)
+    results_after_mistakes = []
     # add
     minus_score = 10
-    for i in range(0, prefix_length + 1)[::-1]:
+    for i in range(1, prefix_length)[::-1]:
         for letter in ascii_lowercase:
-            if len(word_result) >= 5:
-                return word_result[:5]
-            current_string = (prefix[:i] if i != 0 else "") + letter + (prefix[i:] if i != prefix_length else "")
-            word_result += calculate_optional_results(current_string, score - minus_score)
+            if len(results_after_mistakes) >= 5:
+                break
+            current_string = prefix[:i] + letter + prefix[i:]
+            results_after_mistakes += calculate_optional_results(current_string, score - minus_score)
             minus_score = minus_score - 2 if minus_score != 2 else minus_score
 
     # sub
     minus_score = 10
     for i in range(prefix_length)[::-1]:
-        if len(word_result) >= 5:
-            return word_result[:5]
+        if len(results_after_mistakes) >= 5:
+            break
         current_string = (prefix[:i] if i != 0 else "") + (prefix[i + 1:] if i != prefix_length-1 else "")
-        word_result += calculate_optional_results(current_string, score - minus_score)
+        results_after_mistakes += calculate_optional_results(current_string, score - minus_score)
         minus_score = minus_score - 2 if minus_score != 2 else minus_score
 
-    return word_result[:5]
+    best_word_result = best_word_result + results_after_mistakes
+    best_word_result.sort(reverse=True)
+
+    return best_word_result[:5]
 
 
 if __name__ == '__main__':
     WORDS_DETAILS_DICT = initialize_data(make_list_of_files())
-
     while True:
         prefix = input("Please enter a prefix: ")
         result = get_best_k_completions(prefix)

@@ -70,11 +70,11 @@ class Trie:
                 current_words = current_words.union(temp_result)
         return current_words
 
-    def get_all_words_matching_prefix(self, prefix: str) -> set[str]:
+    def get_all_words_matching_prefix(self, prefix: str) -> list[str]:
         """Returns all the words in the trie whose common prefix is the given key thus listing out all
         the suggestions for autocomplete.
         :param prefix: Wanted prefix to search for it all the matching words.
-        :return: Set of all the words that match to the given prefix.
+        :return: List of all the words that match to the given prefix.
         """
         #
         node = self.root
@@ -82,16 +82,16 @@ class Trie:
         for a in prefix:
             # No string in the Trie has this prefix
             if not node.children.get(a):
-                return set()
+                return []
             node = node.children[a]
 
         # If prefix is present as a word, but
         # there is no subtree below the last
         # matching node.
         if not node.children:
-            return set()
+            return []
 
-        return self.suggestions_rec(node, prefix)
+        return list(self.suggestions_rec(node, prefix))
 
 
 # Taken from geeks for geeks
