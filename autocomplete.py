@@ -6,113 +6,7 @@ from typing import List
 from words_details_class import WordDetails
 
 
-DATA = {}
-
-# taken from geeks for geeks
-# https://www.geeksforgeeks.org/auto-complete-feature-using-trie/
-
-# feature using Trie data structure.
-
-
-# creates a trie node
-class TrieNode:
-    def __init__(self):
-        # Initialising one node for trie
-        self.children = {}
-        self.last = False
-
-
-# Given a prefix it will print all the matching words in the array
-class Trie:
-
-    def __init__(self):
-
-        # Initialising the trie structure.
-        self.root = TrieNode()
-
-    def form_trie(self, keys):
-
-        # Forms a trie structure with the given set of strings
-        # if it does not exists already else it merges the key
-        # into it by extending the structure as required
-        for key in keys:
-            self.insert(key)  # Inserting one key to the trie.
-
-    def insert(self, key):
-
-        # Inserts a key into trie if it does not exist already.
-        # And if the key is a prefix of the trie node, just
-        # marks it as leaf node.
-        node = self.root
-
-        for a in key:
-            if not node.children.get(a):
-                node.children[a] = TrieNode()
-
-            node = node.children[a]
-
-        node.last = True
-
-    def suggestions_rec(self, node, word):
-
-        # Method to recursively traverse the trie
-        # and return a whole word.
-        if node.last:
-            print(word)
-
-        for a, n in node.children.items():
-            self.suggestions_rec(n, word + a)
-
-    def print_auto_suggestions(self, key):
-
-        # Returns all the words in the trie whose common
-        # prefix is the given key thus listing out all
-        # the suggestions for autocomplete.
-        node = self.root
-
-        for a in key:
-            # no string in the Trie has this prefix
-            if not node.children.get(a):
-                return 0
-            node = node.children[a]
-
-        # If prefix is present as a word, but
-        # there is no subtree below the last
-        # matching node.
-        if not node.children:
-            return -1
-
-        self.suggestions_rec(node, key)
-        return 1
-
-# Taken from geeks for geeks
-# https://www.geeksforgeeks.org/auto-complete-feature-using-trie/
-
-
-"""
-# Driver Code
-keys = ["hello world", "dog", "hell", "cat", "a", "hel", "help", "helps", "helping"]
-# keys to form the trie structure.
-key = "he"
-# key for autocomplete suggestions.
-
-# creating trie object
-t = Trie()
-
-# creating the trie structure with the
-# given set of strings.
-t.formTrie(keys)
-
-# autocompleting the given key using
-# our trie structure.
-comp = t.printAutoSuggestions(key)
-
-if comp == -1:
-	print("No other strings found with this prefix\n")
-elif comp == 0:
-	print("No string found with this prefix\n")
-
-"""
+WORDS_DETAILS_DICT = {}
 
 
 @dataclass
@@ -190,7 +84,7 @@ def check_user_words(words_list: List[str], score_if_found: int) -> List[AutoCom
     :return:
     """
     word_result = []
-    all_exists_words = DATA.get(words_list[0])
+    all_exists_words = WORDS_DETAILS_DICT.get(words_list[0])
     if not all_exists_words:
         return []
     for obj in all_exists_words:
@@ -231,13 +125,13 @@ def calculate_optional_results(substring: str, score: int) -> List[AutoCompleteD
     return word_result
 
 
-def get_best_k_completions(preffix: str) -> List[AutoCompleteData]:
+def get_best_k_completions(prefix: str) -> List[AutoCompleteData]:
     """ Receive the user's string and return the top 5 rows at the texts that could complete the sentence.
     The string could be with one mistake, and it should be a substring of a sentence.
-    :param preffix: Part of a sentence that the user insert.
+    :param prefix: Part of a sentence that the user insert.
     :return: Best 5 results.
     """
-    prefix_length = len(preffix)
+    prefix_length = len(prefix)
     score = prefix_length * 2
     word_result = calculate_optional_results(prefix, score)
 
@@ -279,9 +173,11 @@ def get_best_k_completions(preffix: str) -> List[AutoCompleteData]:
 
 
 if __name__ == '__main__':
-    DATA = initialize_data(make_list_of_files())
+    WORDS_DETAILS_DICT = initialize_data(make_list_of_files())
 
     while True:
         prefix = input("Please enter a prefix: ")
         get_best_k_completions(prefix)
         # print(get_best_k_completions(prefix))
+
+
